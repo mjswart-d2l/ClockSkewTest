@@ -1,0 +1,10 @@
+dotnet new sln -n ClockSkewTest
+
+dotnet new classlib -n LogMessage
+dotnet sln ClockSkewTest.sln add TestLogMessage/TestLogMessage.csproj
+dotnet add LogMessage/LogMessage.csproj package System.Data.SqlClient
+
+dotnet new nunit -n TestLogMessage
+dotnet sln ClockSkewTest.sln add LogMessage/LogMessage.csproj
+dotnet add TestLogMessage/TestLogMessage.csproj package System.Data.SqlClient
+dotnet add TestLogMessage/TestLogMessage.csproj reference LogMessage/LogMessage.csproj
