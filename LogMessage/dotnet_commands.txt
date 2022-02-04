@@ -8,3 +8,5 @@ dotnet new nunit -n TestLogMessage
 dotnet sln ClockSkewTest.sln add LogMessage/LogMessage.csproj
 dotnet add TestLogMessage/TestLogMessage.csproj package System.Data.SqlClient
 dotnet add TestLogMessage/TestLogMessage.csproj reference LogMessage/LogMessage.csproj
+
+dotnet new gitignore
