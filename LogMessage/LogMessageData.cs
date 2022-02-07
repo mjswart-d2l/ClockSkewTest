@@ -11,21 +11,15 @@ public class LogMessageData {
     
     public void CreateLogTable() {
         string sql = @"
-            IF NOT EXISTS (
-                SELECT *
-                FROM sys.tables
-                WHERE object_id = OBJECT_ID('dbo.MESSAGE_LOG')
-            )
-            BEGIN
-                CREATE TABLE dbo.MESSAGE_LOG
-                (
-                    LogId INT IDENTITY NOT NULL 
-                        PRIMARY KEY,
-                    LogMessage NVARCHAR(MAX) NOT NULL,
-                    LastUpdatedTime DATETIME2
-                        DEFAULT (SYSDATETIME())
-                )
-            END";
+            DROP TABLE IF EXISTS dbo.MESSAGE_LOG; 
+            CREATE TABLE dbo.MESSAGE_LOG
+            (
+                LogId INT IDENTITY NOT NULL 
+                    PRIMARY KEY,
+                LogMessage NVARCHAR(MAX) NOT NULL,
+                LastUpdate DATETIME2
+                    DEFAULT (GETDATE())
+            )";
         using (SqlConnection connection = GetOpenConnection()) {
             SqlCommand cmd = new SqlCommand(sql,connection);
             cmd.ExecuteNonQuery();
@@ -44,12 +38,24 @@ public class LogMessageData {
             return (int)cmd.ExecuteScalar();
         }
     }
+    public int AddLogMessageWithDate(string message, DateTime lastUpdate ) {
+        string sql = @"
+            INSERT dbo.MESSAGE_LOG(LogMessage, LastUpdate)
+            OUTPUT inserted.LogId
+            VALUES (@Message, @LastUpdate);";
+        using (SqlConnection connection = GetOpenConnection()) {
+            SqlCommand cmd = new SqlCommand(sql,connection);
+            cmd.Parameters.Add("Message", SqlDbType.NVarChar).Value = message;
+            cmd.Parameters.Add("LastUpdate", SqlDbType.DateTime).Value = lastUpdate;
+            return (int)cmd.ExecuteScalar();
+        }
+    }
 
     public void UpdateLogMessage(int logId, string message) {
         string sql = @"
             UPDATE dbo.MESSAGE_LOG
-            SET Message = @Message,
-                LastUpdatedTime = SYSDATETIME()
+            SET LogMessage = @Message,
+                LastUpdate = GETDATE()
             WHERE LogId = @LogId;";
         using (SqlConnection connection = GetOpenConnection()) {
             SqlCommand cmd = new SqlCommand(sql,connection);
@@ -61,7 +67,7 @@ public class LogMessageData {
 
      public LogMessageDto? GetLogMessage(int logId ) {
         string sql = @"
-            SELECT LogId, LogMessage, LastUpdatedTime
+            SELECT LogId, LogMessage, LastUpdate
             FROM dbo.MESSAGE_LOG
             WHERE LogId = @LogId";
         using (SqlConnection connection = GetOpenConnection()) {
